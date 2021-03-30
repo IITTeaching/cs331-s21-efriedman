@@ -1,5 +1,5 @@
 from unittest import TestCase
-import random
+import random 
 import urllib.request
 
 ROMEO_SOLILOQUY = """
@@ -34,14 +34,18 @@ ROMEO_SOLILOQUY = """
 # Implement this function
 def compute_ngrams(toks, n=2):
     """Returns an n-gram dictionary based on the provided list of tokens."""
-    n = {}
+    
+    gram_list = []
     for i in range(len(toks)-n+1):
-        a = toks[i]
-        if a in n:
-            n[a].append(tuple(toks[i+1:i+n]))
+        gram_list.append(tuple([toks[i+j] for j in range(n)]))
+    dc = {}
+    for ngram in gram_list:
+        next = tuple(ngram[1:])
+        if ngram[0] in dc:
+            dc[ngram[0]].append(next)
         else:
-            n[a] = [tuple(toks[i+1:i+n])]
-    return n
+            dc[ngram[0]] = [next]
+    return dc
 
 def test1():
     test1_1()
@@ -60,9 +64,9 @@ def test1_1():
                    {'i': [('really', 'really')],
                     'really': [('really', 'like'), ('like', 'cake.')]})
 
-    romeo_toks = [t.lower() for t in ROMEO_SOLILOQUY.split()]
+    shakespeare_toks = [t.lower() for t in ROMEO_SOLILOQUY.split()]
 
-    dct = compute_ngrams(romeo_toks, n=4)
+    dct = compute_ngrams(shakespeare_toks, n=4)
     tc.assertEqual(dct['but'], [('sick', 'and', 'green'), ('fools', 'do', 'wear')])
     tc.assertEqual(dct['it'],
                    [('is', 'the', 'east,'),
@@ -100,19 +104,19 @@ def test1_2():
 ################################################################################
 # Implement this function
 def gen_passage(ngram_dict, length=100):
-    p = []
-    s = sorted(ngram_dict.keys())
-    c = random.choice(s)
-    p.append(c)
-    while(len(p) < length):
-        r = random.choice(ngram_dict[c])
-        p.extend(r)
-        c = r[-1]
-        if c not in ngram_dict:
-            c = random.choice(s)
-            p.append(c)
-    p = ' '.join(p[0: length])
-    return str(p)
+    passage = ''
+    sorted_dict = sorted(ngram_dict)
+    start_token = random.choice(sorted_dict)
+    passage += start_token + ' '
+    while len(passage.split()) < length:
+        if start_token not in sorted_dict:
+            start_token = random.choice(sorted_dict)
+            passage += start_token + ' '
+        else:
+            random_tuple = random.choice(ngram_dict[start_token])
+            passage += ' '.join(random_tuple) + ' '
+            start_token = random_tuple[-1]
+    return passage[:len(passage) - 1]
 
 # 50 Points
 def test2():
@@ -124,8 +128,8 @@ def test2():
                    'like cake. i really really really really like cake. i')
 
     random.seed(1234)
-    romeo_toks = [t.lower() for t in ROMEO_SOLILOQUY.split()]
-    tc.assertEqual(gen_passage(compute_ngrams(romeo_toks), 10),
+    shakespeare_toks = [t.lower() for t in ROMEO_SOLILOQUY.split()]
+    tc.assertEqual(gen_passage(compute_ngrams(shakespeare_toks), 10),
                    'too bold, \'tis not night. see, how she leans her')
 
 def main():
