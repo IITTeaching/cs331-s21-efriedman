@@ -15,6 +15,9 @@ class AVLTree:
 
         def rotate_left(self):
             ### BEGIN SOLUTION
+            n = self.right
+            self.val, n.val = n.val, self.val
+            self.right, n.right, self.left, n.left = n.right, n.left, n, self.left
             ### END SOLUTION
 
         @staticmethod
@@ -31,16 +34,63 @@ class AVLTree:
     @staticmethod
     def rebalance(t):
         ### BEGIN SOLUTION
+        bf = AVLTree.Node.height(t.right) - AVLTree.Node.height(t.left)
+        if bf < -1:
+            if (AVLTree.Node.height(t.left.right) - AVLTree.Node.height(t.left.left)) > 0:
+                t.left.rotate_left()
+            t.rotate_right()
+            AVLTree.rebalance(t.right)
+        if bf > 1:
+            if (AVLTree.Node.height(t.right.right) - AVLTree.Node.height(t.right.left)) < 0:
+                t.right.rotate_right()
+            t.rotate_left()
+            AVLTree.rebalance(t.left)
         ### END SOLUTION
 
     def add(self, val):
         assert(val not in self)
         ### BEGIN SOLUTION
+        def helpRecur(n):
+            if not n:
+                return AVLTree.Node(val)
+            elif val < n.val:
+                n.left = helpRecur(n.left)
+                AVLTree.rebalance(n)
+                return n
+            elif val > n.val:
+                n.right = helpRecur(n.right)
+                AVLTree.rebalance(n)
+                return n
+        recur = helpRecur(self.root)
+        self.root = recur
+        self.size += 1
         ### END SOLUTION
 
     def __delitem__(self, val):
         assert(val in self)
         ### BEGIN SOLUTION
+        def helpRecur2(n, k):
+            if not n:
+                return n
+            elif k < n.val:
+                n.left = helpRecur2(n.left, k)
+            elif k > n.val:
+                n.right = helpRecur2(n.right, k)
+            else:
+                if not n.right:
+                    return n.left
+                elif not n.left:
+                    return n.right
+                c = n.right
+                while c.left:
+                    c = c.left
+                n.val = c.val
+                n.right = helpRecur2(n.right, c.val)
+            AVLTree.rebalance(n)
+            return n
+        recur = helpRecur2(self.root, val)
+        self.root = helpRecur2(self.root, val)
+        self.size -= 1
         ### END SOLUTION
 
     def __contains__(self, val):
